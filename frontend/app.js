@@ -1,4 +1,4 @@
-const API = 'http://localhost:5000/api';
+const API = 'https://personal-blog-cms-stcx.onrender.com/api';
 let currentUser = JSON.parse(localStorage.getItem('cms_user') || 'null');
 let token = localStorage.getItem('cms_token') || '';
 let activePostId = null;
