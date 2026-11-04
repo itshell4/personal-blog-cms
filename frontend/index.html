@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Personal Blog CMS</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
+
+  <!-- Top Navigation Bar -->
+  <nav class="bg-white shadow-sm border-b sticky top-0 z-50">
+    <div class="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center">
+      <div>
+        <button onclick="showSection('home')" class="text-xl font-bold text-indigo-600" id="nav-site-title">My Personal Blog</button>
+        <p class="text-xs text-slate-500" id="nav-site-desc"></p>
+      </div>
+      <div class="flex items-center gap-3">
+        <button onclick="showSection('home')" class="text-sm font-medium hover:text-indigo-600">Home</button>
+        <button id="btn-nav-dashboard" onclick="showSection('dashboard')" class="hidden text-sm font-medium hover:text-indigo-600">User Dashboard</button>
+        <button id="btn-nav-admin" onclick="showSection('admin')" class="hidden text-sm font-medium text-rose-600 hover:text-rose-700">Admin Panel</button>
+        <button id="btn-nav-login" onclick="showSection('auth')" class="bg-indigo-600 text-white px-4 py-1.5 rounded-lg text-sm font-medium hover:bg-indigo-700">Login / Register</button>
+        <button id="btn-nav-logout" onclick="logout()" class="hidden bg-slate-200 text-slate-700 px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-slate-300">Logout</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content Container -->
+  <main class="max-w-6xl mx-auto px-4 py-8 flex-grow w-full">
+
+    <!-- 1. PUBLIC HOME SECTION -->
+    <section id="sec-home" class="space-y-6">
+      <div class="bg-white p-4 rounded-xl shadow-sm border flex flex-wrap gap-3 items-center justify-between">
+        <div class="flex gap-2 flex-grow max-w-md">
+          <input id="search-input" type="text" placeholder="Search blog posts..." class="border rounded-lg px-3 py-2 w-full text-sm" />
+          <button onclick="loadPosts()" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium">Search</button>
+        </div>
+        <div id="category-filters" class="flex gap-2 flex-wrap"></div>
+      </div>
+
+      <div id="posts-grid" class="grid md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+    </section>
+
+    <!-- 2. SINGLE POST & COMMENTS SECTION -->
+    <section id="sec-post" class="hidden max-w-3xl mx-auto space-y-6">
+      <button onclick="showSection('home')" class="text-sm text-indigo-600 font-medium">&larr; Back to all posts</button>
+      <article id="single-post-content" class="bg-white p-6 rounded-xl shadow-sm border space-y-4"></article>
+
+      <!-- Leave a Comment -->
+      <div class="bg-white p-6 rounded-xl shadow-sm border space-y-4">
+        <h3 class="text-lg font-bold">Leave a Comment</h3>
+        <div class="grid sm:grid-cols-2 gap-3">
+          <input id="comment-name" type="text" placeholder="Your Name" class="border rounded-lg px-3 py-2 text-sm" />
+          <input id="comment-email" type="email" placeholder="Your Email" class="border rounded-lg px-3 py-2 text-sm" />
+        </div>
+        <textarea id="comment-content" rows="3" placeholder="Write your comment..." class="border rounded-lg px-3 py-2 w-full text-sm"></textarea>
+        <button onclick="submitComment()" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium">Submit Comment</button>
+      </div>
+
+      <!-- Approved Comments List -->
+      <div class="bg-white p-6 rounded-xl shadow-sm border space-y-3">
+        <h3 class="text-lg font-bold">Comments</h3>
+        <div id="post-comments-list" class="space-y-3"></div>
+      </div>
+    </section>
+
+    <!-- 3. AUTHOR PROFILE SECTION -->
+    <section id="sec-author" class="hidden space-y-6">
+      <button onclick="showSection('home')" class="text-sm text-indigo-600 font-medium">&larr; Back to Home</button>
+      <div id="author-profile-box" class="bg-white p-6 rounded-xl shadow-sm border"></div>
+      <h3 class="text-lg font-bold">Published Posts by Author</h3>
+      <div id="author-posts-grid" class="grid md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+    </section>
+
+    <!-- 4. LOGIN / REGISTER SECTION -->
+    <section id="sec-auth" class="hidden max-w-md mx-auto bg-white p-6 rounded-xl shadow-sm border space-y-4">
+      <h2 class="text-xl font-bold text-center">User Login / Register</h2>
+      <p class="text-xs text-center text-slate-500">Note: The very first registered user automatically becomes Admin!</p>
+      <input id="auth-username" type="text" placeholder="Username (for Register only)" class="border rounded-lg px-3 py-2 w-full text-sm" />
+      <input id="auth-email" type="email" placeholder="Email Address" class="border rounded-lg px-3 py-2 w-full text-sm" />
+      <input id="auth-password" type="password" placeholder="Password" class="border rounded-lg px-3 py-2 w-full text-sm" />
+      <div class="flex gap-3">
+        <button onclick="loginUser()" class="flex-1 bg-indigo-600 text-white py-2 rounded-lg text-sm font-medium">Login</button>
+        <button onclick="registerUser()" class="flex-1 bg-emerald-600 text-white py-2 rounded-lg text-sm font-medium">Register</button>
+      </div>
+    </section>
+
+    <!-- 5. USER DASHBOARD SECTION -->
+    <section id="sec-dashboard" class="hidden space-y-8">
+      <div class="grid md:grid-cols-3 gap-6">
+        <!-- Create / Edit Post Form -->
+        <div class="md:col-span-2 bg-white p-6 rounded-xl shadow-sm border space-y-4">
+          <h2 class="text-lg font-bold" id="editor-heading">Create New Post / Draft</h2>
+          <input type="hidden" id="edit-post-id" />
+          <input id="post-title" type="text" placeholder="Post Title" class="border rounded-lg px-3 py-2 w-full text-sm" />
+          <input id="post-image" type="text" placeholder="Cover Image URL (optional)" class="border rounded-lg px-3 py-2 w-full text-sm" />
+          <textarea id="post-content" rows="6" placeholder="Write your blog post content here..." class="border rounded-lg px-3 py-2 w-full text-sm"></textarea>
+          
+          <div class="grid sm:grid-cols-2 gap-4">
+            <div>
+              <label class="text-xs font-semibold uppercase text-slate-500">Select Categories</label>
+              <div id="editor-categories" class="flex flex-wrap gap-2 mt-1"></div>
+            </div>
+            <div>
+              <label class="text-xs font-semibold uppercase text-slate-500">Select Tags</label>
+              <div id="editor-tags" class="flex flex-wrap gap-2 mt-1"></div>
+            </div>
+          </div>
+
+          <div class="flex gap-3">
+            <button onclick="savePost('published')" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium">Publish Post</button>
+            <button onclick="savePost('draft')" class="bg-amber-500 text-white px-4 py-2 rounded-lg text-sm font-medium">Save as Draft</button>
+          </div>
+        </div>
+
+        <!-- Manage Profile & Categories/Tags -->
+        <div class="space-y-6">
+          <div class="bg-white p-6 rounded-xl shadow-sm border space-y-3">
+            <h3 class="font-bold">Manage My Profile</h3>
+            <input id="prof-username" type="text" placeholder="Username" class="border rounded-lg px-3 py-2 w-full text-sm" />
+            <input id="prof-image" type="text" placeholder="Profile Image URL" class="border rounded-lg px-3 py-2 w-full text-sm" />
+            <textarea id="prof-bio" rows="2" placeholder="Short Bio" class="border rounded-lg px-3 py-2 w-full text-sm"></textarea>
+            <button onclick="updateProfile()" class="bg-slate-800 text-white px-4 py-2 rounded-lg text-sm w-full">Save Profile</button>
+          </div>
+
+          <div class="bg-white p-6 rounded-xl shadow-sm border space-y-3">
+            <h3 class="font-bold">Add Category / Tag</h3>
+            <div class="flex gap-2">
+              <input id="new-cat-name" type="text" placeholder="New Category" class="border rounded-lg px-3 py-1.5 w-full text-sm" />
+              <button onclick="addCategory()" class="bg-indigo-600 text-white px-3 rounded-lg text-xs">Add</button>
+            </div>
+            <div class="flex gap-2">
+              <input id="new-tag-name" type="text" placeholder="New Tag" class="border rounded-lg px-3 py-1.5 w-full text-sm" />
+              <button onclick="addTag()" class="bg-indigo-600 text-white px-3 rounded-lg text-xs">Add</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- My Posts & Comment Moderation -->
+      <div class="grid md:grid-cols-2 gap-6">
+        <div class="bg-white p-6 rounded-xl shadow-sm border space-y-3">
+          <h3 class="font-bold">My Posts (Published & Drafts)</h3>
+          <div id="my-posts-list" class="space-y-2 text-sm"></div>
+        </div>
+        <div class="bg-white p-6 rounded-xl shadow-sm border space-y-3">
+          <h3 class="font-bold">Comments on My Posts</h3>
+          <div id="my-comments-list" class="space-y-2 text-sm"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6. ADMIN PANEL SECTION -->
+    <section id="sec-admin" class="hidden space-y-6">
+      <div class="bg-white p-6 rounded-xl shadow-sm border space-y-3">
+        <h2 class="text-lg font-bold text-rose-600">Admin: Manage Site Settings</h2>
+        <div class="grid sm:grid-cols-2 gap-3">
+          <input id="admin-site-title" type="text" placeholder="Site Title" class="border rounded-lg px-3 py-2 text-sm" />
+          <input id="admin-site-desc" type="text" placeholder="Site Description" class="border rounded-lg px-3 py-2 text-sm" />
+        </div>
+        <button onclick="updateSiteSettings()" class="bg-rose-600 text-white px-4 py-2 rounded-lg text-sm font-medium">Update Settings</button>
+      </div>
+
+      <div class="grid md:grid-cols-3 gap-6">
+        <div class="bg-white p-5 rounded-xl shadow-sm border space-y-2">
+          <h3 class="font-bold">All Users</h3>
+          <div id="admin-users-list" class="space-y-2 text-xs"></div>
+        </div>
+        <div class="bg-white p-5 rounded-xl shadow-sm border space-y-2">
+          <h3 class="font-bold">All Posts</h3>
+          <div id="admin-posts-list" class="space-y-2 text-xs"></div>
+        </div>
+        <div class="bg-white p-5 rounded-xl shadow-sm border space-y-2">
+          <h3 class="font-bold">All Comments</h3>
+          <div id="admin-comments-list" class="space-y-2 text-xs"></div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Newsletter Footer -->
+  <footer class="bg-white border-t py-6 mt-12">
+    <div class="max-w-6xl mx-auto px-4 flex flex-wrap justify-between items-center gap-4">
+      <p class="text-sm text-slate-500">Personal Blog CMS — College Project</p>
+      <div class="flex gap-2">
+        <input id="newsletter-email" type="email" placeholder="Subscribe to newsletter..." class="border rounded-lg px-3 py-1.5 text-sm" />
+        <button onclick="subscribeNewsletter()" class="bg-slate-800 text-white px-4 py-1.5 rounded-lg text-sm">Subscribe</button>
+      </div>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
